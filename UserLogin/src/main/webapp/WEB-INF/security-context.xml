@@ -7,20 +7,53 @@
 	http://www.springframework.org/schema/security/spring-security-3.2.xsd">
 
 	<http auto-config="true">
-		<intercept-url pattern="/**" access="isAuthenticated()" />
-		<form-login/>
-		<logout logout-url="/logout" logout-success-url="/index"/>
+		<intercept-url pattern="/**" access="ROLE_USER,ROLE_ADMINs" />
+			<form-login
+		    login-page="/login"
+		    default-target-url="/welcome"
+			authentication-failure-url="/login?error"
+			username-parameter="username"
+			password-parameter="password" />
+		<logout logout-success-url="/login?logout"  />
+		<!-- enable csrf protection -->
+		<csrf/>
 	</http>
 
-	<authentication-manager>
-	  <authentication-provider>
+	<!-- <authentication-manager>
+	 <authentication-provider>
+	 hardcoding credentials
 	    <user-service>
-		<user name="pavan" password="1234" authorities="Admin,User" />
-		<user name="vanka" password="1234" authorities="User"/>
+		<user name="pavan" password="1234" authorities="ROLE_ADMIN,ROLE_USER" />
+		<user name="vanka" password="1234" authorities="ROLE_USER"/>
 	    </user-service>
 	    
-	   <!--  <jdbc-user-service data-source-ref=""/> -->
+	    
+	    
+	    
+	     
+	    <jdbc-user-service data-source-ref="dataSource"
+	     users-by-username-query=
+		    "select username,password, enabled from users where username=?"
+		  authorities-by-username-query=
+		    "select username, role from user_roles where username =?  " />
+	   
 	  </authentication-provider>
 	</authentication-manager>
+	 -->
+	 
+	 <beans:bean id="userDetailsService" name="userDetailsService" class="com.project.userlogin.business.impl.UserDetailsServiceImpl" />
+	
+	<beans:bean id="daoAuthenticationProvider" class="org.springframework.security.authentication.dao.DaoAuthenticationProvider">
+	   <beans:property name="userDetailsService" ref="userDetailsService"></beans:property>
+	</beans:bean>
+	
+	<beans:bean name= "authenticationManager" class = "org.springframework.security.authentication.AuthenticationManager">
+     <beans:property name="providers">
+     <beans:list><beans:ref local="daoAuthenticationProvider"/></beans:list>
+     </beans:property>
+	</beans:bean>
+
+<authentication-manager>
+<authentication-provider user-service-ref="userDetailsService"><password-encoder hash="md5"></password-encoder></authentication-provider></authentication-manager>
 
 </beans:beans>
